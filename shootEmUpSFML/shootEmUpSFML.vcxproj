@@ -131,7 +131,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="projectile.hpp" />
     <ClCompile Include="shootEmUpSFML.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="sprite.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
