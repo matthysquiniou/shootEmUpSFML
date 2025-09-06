@@ -76,20 +76,23 @@ struct ChildSprite {
 
 class SpriteComposite : public sf::Drawable, public sf::Transformable {
 public:
+    bool flipX = false;
+    bool flipY = false;
     struct Child {
         std::shared_ptr<SpriteWrapper> sprite;
         std::shared_ptr<Animation> anim;
         sf::Vector2f offset{ 0.f, 0.f };
         bool visible = true;             
         bool animActive = true;        
-        bool stopAfterCurrentLoop = false; 
+        bool stopAfterCurrentLoop = false;
+        bool stopAfterCurrentLoopVisibleToggle = false;
     };
 
     void addChild(std::shared_ptr<SpriteWrapper> sprite,
         std::shared_ptr<Animation> anim = nullptr,
         sf::Vector2f offset = { 0.f, 0.f })
     {
-        m_children.push_back({ sprite, anim, offset, true, anim != nullptr });
+        m_children.push_back({ sprite, anim, offset, true, anim != nullptr, false, false });
     }
 
     void setVisible(std::size_t index, bool visible) {
@@ -107,6 +110,16 @@ public:
         }
     }
 
+    bool isAnimationGoing() {
+        for (auto& child : m_children) {
+            if (child.animActive == true)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     void update(float dt) {
         for (auto& child : m_children) {
             if (!child.visible) continue;
@@ -122,16 +135,22 @@ public:
                 if (child.stopAfterCurrentLoop && finishedLoop) {
                     child.animActive = false;
                     child.stopAfterCurrentLoop = false;
+                    if (child.stopAfterCurrentLoopVisibleToggle)
+                    {
+                        child.visible = false;
+                        child.stopAfterCurrentLoopVisibleToggle = false;
+                    }
                 }
             }
         }
     }
 
-    void stopAnimationAfterLoop(std::size_t index) {
+    void stopAnimationAfterLoop(std::size_t index, bool visibleToggle = false) {
         if (index < m_children.size()) {
             auto& child = m_children[index];
             if (child.anim) {
                 child.stopAfterCurrentLoop = true;
+                child.stopAfterCurrentLoopVisibleToggle = visibleToggle;
             }
         }
     }
@@ -141,8 +160,19 @@ private:
         states.transform *= getTransform();
         for (auto& child : m_children) {
             if (!child.visible) continue;
-            child.sprite->get().setPosition(child.offset);
-            target.draw(child.sprite->get(), states);
+
+            sf::Sprite sprite = child.sprite->get();  
+            sprite.setPosition(child.offset);
+
+            sf::FloatRect bounds = sprite.getLocalBounds();
+            if (flipX || flipY) {
+                sprite.setOrigin({ flipX ? bounds.size.x : 0.f,
+                    flipY ? bounds.size.y : 0.f });
+                sprite.setScale({ flipX ? -1.f : 1.f,
+                    flipY ? -1.f : 1.f });
+            }
+
+            target.draw(sprite, states);
         }
     }
 

@@ -18,12 +18,18 @@
     <ClCompile Include="shootEmUpSFML.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="projectile.hpp">
+    <ClCompile Include="Pool.hpp">
       <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="sprite.hpp">
+    <ClInclude Include="SpriteComposite.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Entity.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BulletManager.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
