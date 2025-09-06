@@ -3,11 +3,21 @@
 void ColisionManager::update() {
 
     std::vector<Pool*> enemyPools = {
-        &pools.fighter
+        &pools.fighter,
+        &pools.scout,
+        &pools.frigate,
+        &pools.torpedo,
+        &pools.bomber,
+        &pools.battleCruiser
     };
 
     std::vector<std::shared_ptr<Pool>*> enemybulletPools = {
-        &pools.fighterBullet
+        &pools.fighterBullet,
+        &pools.scoutBullet,
+        &pools.frigateBullet,
+        &pools.torpedoBullet,
+        &pools.bomberBullet,
+        &pools.battleCruiserBullet
     };
 
     // Collision joueur -> ennemis

@@ -3,11 +3,12 @@
 #include <vector>
 #include <memory>
 #include "SpriteComposite.hpp"
+#include "MovementPatterns.hpp"
+
 class Pool;
 
 class Entity : public sf::Drawable {
 public:
-    using MovementPattern = std::function<void(Entity&, float)>;
     using BulletSpawner = std::function<void(Entity&, Pool&, float)>;
 
     enum class Type {
@@ -23,6 +24,7 @@ public:
     void setHurtbox(const sf::Vector2f& size, const sf::Vector2f& offset = { 0.f, 0.f });
 
     void setMovementPattern(MovementPattern pattern);
+    void setPatternState(PatternState pattern);
     void setDestructionPool(std::shared_ptr<Pool> pool);
     std::shared_ptr<Pool> getDestructionPool();
 
@@ -69,6 +71,7 @@ private:
 
     sf::Vector2f velocity;
     MovementPattern m_pattern;
+    PatternState m_patternState;
     BulletSpawner m_bulletSpawner;
 
     float lastFire = 0.f;

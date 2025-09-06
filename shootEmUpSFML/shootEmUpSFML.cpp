@@ -38,7 +38,7 @@ int main() {
     auto player = pools.player.spawn({ 400.f, 500.f });
     auto& playerComp = player->getComposite();
 
-    pools.fighter.spawn({ 400.f, 100.f });
+    pools.battleCruiser.spawn({ 400.f, 100.f });
 
     auto colisionManager = ColisionManager(pools);
 
@@ -100,22 +100,70 @@ int main() {
 
         pools.player.update(dt);
         pools.playerBullet.update(dt);
+
         pools.fighter.update(dt);
         pools.fighterBullet->update(dt);
         pools.fighterDestruction->update(dt);
 
+        pools.scout.update(dt);
+        pools.scoutBullet->update(dt);
+        pools.scoutDestruction->update(dt);
+
+        pools.frigate.update(dt);
+        pools.frigateBullet->update(dt);
+        pools.frigateDestruction->update(dt);
+
+        pools.torpedo.update(dt);
+        pools.torpedoBullet->update(dt);
+        pools.torpedoDestruction->update(dt);
+
+        pools.bomber.update(dt);
+        pools.bomberBullet->update(dt);
+        pools.bomberDestruction->update(dt);
+
+        pools.battleCruiser.update(dt);
+        pools.battleCruiserBullet->update(dt);
+        pools.battleCruiserDestruction->update(dt);
 
         window.clear();
+
         pools.player.draw(window);
         pools.playerBullet.draw(window);
+
         pools.fighter.draw(window);
         pools.fighterBullet->draw(window);
         pools.fighterDestruction->draw(window);
+
+        pools.scout.draw(window);
+        pools.scoutBullet->draw(window);
+        pools.scoutDestruction->draw(window);
+
+        pools.torpedo.draw(window);
+        pools.torpedoBullet->draw(window);
+        pools.torpedoDestruction->draw(window);
+
+        pools.bomber.draw(window);
+        pools.bomberBullet->draw(window);
+        pools.bomberDestruction->draw(window);
+
+        pools.battleCruiser.draw(window);
+        pools.battleCruiserBullet->draw(window);
+        pools.battleCruiserDestruction->draw(window);
 
         drawHitboxes(window, pools.player.getPool());
         drawHitboxes(window, pools.playerBullet.getPool());
         drawHitboxes(window, pools.fighter.getPool());
         drawHitboxes(window, pools.fighterBullet->getPool());
+        drawHitboxes(window, pools.scout.getPool());
+        drawHitboxes(window, pools.scoutBullet->getPool());
+        drawHitboxes(window, pools.frigate.getPool());
+        drawHitboxes(window, pools.frigateBullet->getPool());
+        drawHitboxes(window, pools.torpedo.getPool());
+        drawHitboxes(window, pools.torpedoBullet->getPool());
+        drawHitboxes(window, pools.bomber.getPool());
+        drawHitboxes(window, pools.bomberBullet->getPool());
+        drawHitboxes(window, pools.battleCruiser.getPool());
+        drawHitboxes(window, pools.battleCruiserBullet->getPool());
 
         window.display();
     }

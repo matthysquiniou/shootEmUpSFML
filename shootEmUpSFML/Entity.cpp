@@ -3,6 +3,7 @@
 #include "SoundManager.hpp"
 #include <iostream>
 
+
 // --- ctor/dtor ---
 Entity::Entity(Type type) : m_type(type) {}
 Entity::~Entity() = default;
@@ -24,6 +25,10 @@ void Entity::setHurtbox(const sf::Vector2f& size, const sf::Vector2f& offset) {
 
 void Entity::setMovementPattern(MovementPattern pattern) {
     m_pattern = std::move(pattern);
+}
+
+void Entity::setPatternState(PatternState patternState) {
+    m_patternState = patternState;
 }
 
 void Entity::setDestructionPool(std::shared_ptr<Pool> pool) {
@@ -49,7 +54,7 @@ void Entity::setBulletPool(std::shared_ptr<Pool> pool) {
 // --- update ---
 void Entity::update(float dt) {
     if (m_pattern) {
-        m_pattern(*this, dt);
+        m_pattern(*this, dt, m_patternState);
     }
 
     if (m_bulletSpawner) {
@@ -57,7 +62,6 @@ void Entity::update(float dt) {
         if (lastFire >= m_fireRate) {
             lastFire = 0.f;
             m_bulletSpawner(*this, *bulletPool, dt);
-            SoundManager::playSwoosh();
         }
     }
 
