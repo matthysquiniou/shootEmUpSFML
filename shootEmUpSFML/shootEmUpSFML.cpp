@@ -1,8 +1,8 @@
 #include "SpriteComposite.hpp"
 #include "Entity.hpp"
 #include "Pool.hpp"
-#include "BulletManager.hpp"
-#include <SFML/Audio.hpp>
+#include "ColisionManager.hpp"
+#include "SoundManager.hpp"
 #include <iostream>
 
 void drawHitboxes(sf::RenderWindow& window, const std::vector<std::shared_ptr<Entity>>& entities) {
@@ -28,12 +28,8 @@ void drawHitboxes(sf::RenderWindow& window, const std::vector<std::shared_ptr<En
 int main() {
     sf::RenderWindow window(sf::VideoMode({ 800, 600 }), "Player vs Enemy");
 
-    sf::SoundBuffer buffer;
-    buffer.loadFromFile("assets/sound/background.mp3");
-
-    sf::Sound sound(buffer);
-    sound.setVolume(20.f);
-    sound.play();
+    SoundManager::init();
+    SoundManager::playBackground();
 
     window.setFramerateLimit(60);
 
@@ -44,7 +40,7 @@ int main() {
 
     pools.fighter.spawn({ 400.f, 100.f });
 
-    auto bulletManager = BulletManager(pools);
+    auto colisionManager = ColisionManager(pools);
 
     bool shooting = false;
     float timeSinceLastShot = 0.f;
@@ -97,9 +93,10 @@ int main() {
         if (shooting && timeSinceLastShot >= fireRate && player) {
             timeSinceLastShot = 0.f;
             pools.playerBullet.spawn(player->getPosition() + sf::Vector2f(8.f, -20.f));
+            SoundManager::playSwoosh();
         }
 
-        bulletManager.update();
+        colisionManager.update();
 
         pools.player.update(dt);
         pools.playerBullet.update(dt);
