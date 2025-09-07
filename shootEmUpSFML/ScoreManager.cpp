@@ -33,3 +33,7 @@ void ScoreManager::draw(sf::RenderTarget& target) {
     if (!s_initialized) init();
     target.draw(s_text);
 }
+
+int ScoreManager::getScore() {
+    return s_score;
+}

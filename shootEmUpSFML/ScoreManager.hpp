@@ -5,6 +5,8 @@ class ScoreManager {
 public:
     static void addScore(int points);
 
+    static int getScore();
+
     static void reset();
 
     static void draw(sf::RenderTarget& target);

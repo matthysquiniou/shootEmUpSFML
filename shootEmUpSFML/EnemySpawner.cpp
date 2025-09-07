@@ -3,7 +3,7 @@
 #include <random>
 
 EnemySpawner::EnemySpawner(PoolManager& pools)
-    : m_pools(pools)
+    : m_pools(&pools)
 {
     m_rng.seed(std::random_device{}());
 }

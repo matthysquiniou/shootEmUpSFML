@@ -20,7 +20,7 @@ public:
     void setPointGainInterval(float seconds);
 
 private:
-    PoolManager& m_pools;
+    PoolManager* m_pools;
 
     std::vector<EnemyType> m_enemyTypes;
 

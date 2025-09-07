@@ -6,6 +6,9 @@
 #include "BackgroundManager.hpp"
 #include "EnemySpawner.hpp"
 #include "ScoreManager.hpp"
+#include "GameState.hpp"
+#include "MenuManager.hpp"
+#include "GameOverScreen.hpp"
 #include <iostream>
 
 void drawHitboxes(sf::RenderWindow& window, const std::vector<std::shared_ptr<Entity>>& entities) {
@@ -44,17 +47,10 @@ int main() {
     window.setFramerateLimit(60);
 
     PoolManager pools;
-
     EnemySpawner spawner(pools);
 
-    spawner.addEnemyType(10, [&](sf::Vector2f pos) { pools.fighter.spawn(pos); });
-    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.scout.spawn(pos); });
-    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.bomber.spawn(pos); });
-    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.frigate.spawn(pos); });
-    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.torpedo.spawn(pos); });
-    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.battleCruiser.spawn(pos); });
-
     auto player = pools.player.spawn({ 400.f, 500.f });
+    player->deactivate();
     auto& playerComp = player->getComposite();
 
     auto colisionManager = ColisionManager(pools);
@@ -64,135 +60,186 @@ int main() {
     const float fireRate = 0.2f;
 
     sf::Clock clock;
+
+    GameState state = GameState::Menu;
+    MenuManager menu;
+    GameOverScreen gameOver;
+
     while (window.isOpen()) {
         float dt = clock.restart().asSeconds();
 
-        spawner.update(dt);
-
-        timeSinceLastShot += dt;
-
-        sf::Vector2f velocity(0.f, 0.f);
-
-        while (auto e = window.pollEvent()) {
-            if (e->is<sf::Event::Closed>()) window.close();
-
-            if (auto pressed = e->getIf<sf::Event::MouseButtonPressed>()) {
-                if (pressed->button == sf::Mouse::Button::Left) {
-                    shooting = true;
-                    playerComp.setAnimationActive(2, true);
-                }
+        while (auto event = window.pollEvent()) {
+            const sf::Event& e = *event;
+            if (e.is<sf::Event::Closed>()) {
+                window.close();
             }
-            if (auto released = e->getIf<sf::Event::MouseButtonReleased>()) {
-                if (released->button == sf::Mouse::Button::Left) {
+            if (state == GameState::Menu) {
+                menu.handleEvent(e, state);
+                if (state == GameState::Playing) {
+                    pools = PoolManager();
+                    colisionManager = ColisionManager(pools);
+                    spawner = EnemySpawner(pools);
+                    spawner.addEnemyType(10, [&](sf::Vector2f pos) { pools.fighter.spawn(pos); });
+                    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.scout.spawn(pos); });
+                    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.bomber.spawn(pos); });
+                    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.frigate.spawn(pos); });
+                    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.torpedo.spawn(pos); });
+                    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.battleCruiser.spawn(pos); });
+
+                    player = pools.player.spawn({ 400.f, 500.f });
                     shooting = false;
-                    playerComp.stopAnimationAfterLoop(2);
+                }
+            }
+            else if (state == GameState::GameOver) {
+                gameOver.handleEvent(e, state);
+                if (state == GameState::Playing) {
+                    pools = PoolManager();
+                    colisionManager = ColisionManager(pools);
+                    spawner = EnemySpawner(pools);
+                    spawner.addEnemyType(10, [&](sf::Vector2f pos) { pools.fighter.spawn(pos); });
+                    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.scout.spawn(pos); });
+                    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.bomber.spawn(pos); });
+                    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.frigate.spawn(pos); });
+                    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.torpedo.spawn(pos); });
+                    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.battleCruiser.spawn(pos); });
+
+                    player = pools.player.spawn({ 400.f, 500.f });
+                    shooting = false;
+                }
+            }
+            else {
+                if (auto pressed = event->getIf<sf::Event::MouseButtonPressed>()) {
+                    if (pressed->button == sf::Mouse::Button::Left) {
+                        shooting = true;
+                        playerComp.setAnimationActive(2, true);
+                    }
+                }
+                if (auto released = event->getIf<sf::Event::MouseButtonReleased>()) {
+                    if (released->button == sf::Mouse::Button::Left) {
+                        shooting = false;
+                        playerComp.stopAnimationAfterLoop(2);
+                    }
                 }
             }
         }
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))  velocity.x -= 400.f * dt;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) velocity.x += 400.f * dt;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))    velocity.y -= 400.f * dt;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down))  velocity.y += 400.f * dt;
-
-        if (velocity.x == 0 && velocity.y == 0) {
-            playerComp.setAnimationActive(1, false);
-            playerComp.setVisible(1, false);
-            playerComp.setAnimationActive(0, true);
-            playerComp.setVisible(0, true);
-        }else {
-            playerComp.setAnimationActive(1, true);
-            playerComp.setVisible(1, true);
-            playerComp.setAnimationActive(0, false);
-            playerComp.setVisible(0, false);
-        }
-
-        if (player) player->move(velocity);
-
-
-        if (shooting && timeSinceLastShot >= fireRate && player) {
-            timeSinceLastShot = 0.f;
-            pools.playerBullet.spawn(player->getPosition() + sf::Vector2f(8.f, -20.f));
-            SoundManager::playSwoosh();
-        }
-
-        bgManager.update(dt);
-
-        pools.player.update(dt);
-        pools.fighter.update(dt);
-        pools.scout.update(dt);
-        pools.frigate.update(dt);
-        pools.torpedo.update(dt);
-        pools.bomber.update(dt);
-        pools.battleCruiser.update(dt);
-
-        pools.playerBullet.update(dt);
-        pools.fighterBullet->update(dt);
-        pools.scoutBullet->update(dt);
-        pools.frigateBullet->update(dt);
-        pools.torpedoBullet->update(dt);
-        pools.bomberBullet->update(dt);
-        pools.battleCruiserBullet->update(dt);
-
-        colisionManager.update();
-
-        pools.fighterDestruction->update(dt);
-        pools.scoutDestruction->update(dt);
-        pools.frigateDestruction->update(dt);
-        pools.torpedoDestruction->update(dt);
-        pools.bomberDestruction->update(dt);
-        pools.battleCruiserDestruction->update(dt);
 
         window.clear();
 
-        ScoreManager::draw(window);
+        if (state == GameState::Menu) {
+            menu.draw(window);
+        }
+        else if (state == GameState::Playing) {
+            spawner.update(dt);
+            timeSinceLastShot += dt;
 
-        window.draw(bgManager);
+            sf::Vector2f velocity(0.f, 0.f);
 
-        pools.player.draw(window);
-        pools.playerBullet.draw(window);
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))  velocity.x -= 400.f * dt;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) velocity.x += 400.f * dt;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))    velocity.y -= 400.f * dt;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down))  velocity.y += 400.f * dt;
 
-        pools.fighter.draw(window);
-        pools.fighterBullet->draw(window);
-        pools.fighterDestruction->draw(window);
+            if (velocity.x == 0 && velocity.y == 0) {
+                playerComp.setAnimationActive(1, false);
+                playerComp.setVisible(1, false);
+                playerComp.setAnimationActive(0, true);
+                playerComp.setVisible(0, true);
+            }
+            else {
+                playerComp.setAnimationActive(1, true);
+                playerComp.setVisible(1, true);
+                playerComp.setAnimationActive(0, false);
+                playerComp.setVisible(0, false);
+            }
 
-        pools.scout.draw(window);
-        pools.scoutBullet->draw(window);
-        pools.scoutDestruction->draw(window);
+            if (player) player->move(velocity);
 
-        pools.frigate.draw(window);
-        pools.frigateBullet->draw(window);
-        pools.frigateDestruction->draw(window);
+            if (shooting && timeSinceLastShot >= fireRate && player) {
+                timeSinceLastShot = 0.f;
+                pools.playerBullet.spawn(player->getPosition() + sf::Vector2f(8.f, -20.f));
+                SoundManager::playSwoosh();
+            }
 
-        pools.torpedo.draw(window);
-        pools.torpedoBullet->draw(window);
-        pools.torpedoDestruction->draw(window);
+            bgManager.update(dt);
 
-        pools.bomber.draw(window);
-        pools.bomberBullet->draw(window);
-        pools.bomberDestruction->draw(window);
+            pools.player.update(dt);
+            pools.fighter.update(dt);
+            pools.scout.update(dt);
+            pools.frigate.update(dt);
+            pools.torpedo.update(dt);
+            pools.bomber.update(dt);
+            pools.battleCruiser.update(dt);
 
-        pools.battleCruiser.draw(window);
-        pools.battleCruiserBullet->draw(window);
-        pools.battleCruiserDestruction->draw(window);
+            pools.playerBullet.update(dt);
+            pools.fighterBullet->update(dt);
+            pools.scoutBullet->update(dt);
+            pools.frigateBullet->update(dt);
+            pools.torpedoBullet->update(dt);
+            pools.bomberBullet->update(dt);
+            pools.battleCruiserBullet->update(dt);
 
+            colisionManager.update();
 
-        if (displayBox)
-        {
-            drawHitboxes(window, pools.player.getPool());
-            drawHitboxes(window, pools.playerBullet.getPool());
-            drawHitboxes(window, pools.fighter.getPool());
-            drawHitboxes(window, pools.fighterBullet->getPool());
-            drawHitboxes(window, pools.scout.getPool());
-            drawHitboxes(window, pools.scoutBullet->getPool());
-            drawHitboxes(window, pools.frigate.getPool());
-            drawHitboxes(window, pools.frigateBullet->getPool());
-            drawHitboxes(window, pools.torpedo.getPool());
-            drawHitboxes(window, pools.torpedoBullet->getPool());
-            drawHitboxes(window, pools.bomber.getPool());
-            drawHitboxes(window, pools.bomberBullet->getPool());
-            drawHitboxes(window, pools.battleCruiser.getPool());
-            drawHitboxes(window, pools.battleCruiserBullet->getPool());
+            pools.fighterDestruction->update(dt);
+            pools.scoutDestruction->update(dt);
+            pools.frigateDestruction->update(dt);
+            pools.torpedoDestruction->update(dt);
+            pools.bomberDestruction->update(dt);
+            pools.battleCruiserDestruction->update(dt);
+
+            window.draw(bgManager);
+            ScoreManager::draw(window);
+
+            pools.player.draw(window);
+            pools.playerBullet.draw(window);
+
+            pools.fighter.draw(window);
+            pools.fighterBullet->draw(window);
+            pools.fighterDestruction->draw(window);
+
+            pools.scout.draw(window);
+            pools.scoutBullet->draw(window);
+            pools.scoutDestruction->draw(window);
+
+            pools.frigate.draw(window);
+            pools.frigateBullet->draw(window);
+            pools.frigateDestruction->draw(window);
+
+            pools.torpedo.draw(window);
+            pools.torpedoBullet->draw(window);
+            pools.torpedoDestruction->draw(window);
+
+            pools.bomber.draw(window);
+            pools.bomberBullet->draw(window);
+            pools.bomberDestruction->draw(window);
+
+            pools.battleCruiser.draw(window);
+            pools.battleCruiserBullet->draw(window);
+            pools.battleCruiserDestruction->draw(window);
+
+            if (displayBox) {
+                drawHitboxes(window, pools.player.getPool());
+                drawHitboxes(window, pools.playerBullet.getPool());
+                drawHitboxes(window, pools.fighter.getPool());
+                drawHitboxes(window, pools.fighterBullet->getPool());
+                drawHitboxes(window, pools.scout.getPool());
+                drawHitboxes(window, pools.scoutBullet->getPool());
+                drawHitboxes(window, pools.frigate.getPool());
+                drawHitboxes(window, pools.frigateBullet->getPool());
+                drawHitboxes(window, pools.torpedo.getPool());
+                drawHitboxes(window, pools.torpedoBullet->getPool());
+                drawHitboxes(window, pools.bomber.getPool());
+                drawHitboxes(window, pools.bomberBullet->getPool());
+                drawHitboxes(window, pools.battleCruiser.getPool());
+                drawHitboxes(window, pools.battleCruiserBullet->getPool());
+            }
+
+            if (!player || !player->isActive()) {
+                state = GameState::GameOver;
+            }
+        }
+        else if (state == GameState::GameOver) {
+            gameOver.draw(window, ScoreManager::getScore());
         }
 
         window.display();

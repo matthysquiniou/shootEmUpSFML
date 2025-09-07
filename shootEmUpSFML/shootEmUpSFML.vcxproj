@@ -135,6 +135,8 @@
     <ClCompile Include="ColisionManager.cpp" />
     <ClCompile Include="EnemySpawner.cpp" />
     <ClCompile Include="Entity.cpp" />
+    <ClCompile Include="GameOverScreen.cpp" />
+    <ClCompile Include="MenuManager.cpp" />
     <ClCompile Include="MouvementPatterns.cpp" />
     <ClCompile Include="Pool.cpp" />
     <ClCompile Include="Pool.hpp" />
@@ -149,6 +151,9 @@
     <ClInclude Include="ColisionManager.hpp" />
     <ClInclude Include="EnemySpawner.hpp" />
     <ClInclude Include="Entity.hpp" />
+    <ClInclude Include="GameOverScreen.hpp" />
+    <ClInclude Include="GameState.hpp" />
+    <ClInclude Include="MenuManager.hpp" />
     <ClInclude Include="MovementPatterns.hpp" />
     <ClInclude Include="randomGenerator.hpp" />
     <ClInclude Include="ScoreManager.hpp" />
