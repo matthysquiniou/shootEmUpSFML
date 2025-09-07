@@ -1,4 +1,7 @@
 #include "Pool.hpp"
+#include "RandomGenerator.hpp"
+#include "SoundManager.hpp"
+#include <iostream>
 
 // ===================== Pool =====================
 
@@ -17,7 +20,8 @@ Pool::Pool(
     std::shared_ptr<Pool> bulletPool,
     std::shared_ptr<Pool> destructionPool,
     bool desactivateAfterAnimation,
-    PatternState patternState
+    PatternState patternState,
+    int score
 )
     : sprite(sprite),
     pattern(pattern),
@@ -31,7 +35,8 @@ Pool::Pool(
     bulletPool(bulletPool),
     destructionPool(destructionPool),
     desactivateAfterAnimation(desactivateAfterAnimation),
-    patternState(patternState)
+    patternState(patternState),
+    score(score)
 {
     pool.reserve(capacity);
     for (std::size_t i = 0; i < capacity; i++) {
@@ -54,6 +59,7 @@ std::shared_ptr<Entity> Pool::spawn(const sf::Vector2f& pos, std::shared_ptr<Pat
             obj->setBulletPool(bulletPool);
             obj->setDestructionPool(destructionPool);
             obj->setDesactivateAfterAnimation(desactivateAfterAnimation);
+            obj->setScore(score);
             obj->setPosition(pos);
             obj->activate();
             if (ps != nullptr) {
@@ -72,8 +78,8 @@ void Pool::update(float dt) {
         if (obj->isActive()) {
             obj->update(dt);
 
-            if (obj->getPosition().y < -100.f || obj->getPosition().y > 700.f ||
-                obj->getPosition().x < -100.f || obj->getPosition().x > 900.f) {
+            if (obj->getPosition().y < -200.f || obj->getPosition().y > 920.f ||
+                obj->getPosition().x < -200.f || obj->getPosition().x > 1480.f) {
                 obj->deactivate();
             }
         }
@@ -99,6 +105,9 @@ const std::vector<std::shared_ptr<Entity>>& Pool::getPool() const {
 std::shared_ptr<SpriteComposite> PoolManager::createPlayerSprite() {
     auto comp = std::make_shared<SpriteComposite>();
     auto base1 = std::make_shared<SpriteWrapper>("assets/player/ms1.png");
+    auto base2 = std::make_shared<SpriteWrapper>("assets/player/ms2.png");
+    auto base3 = std::make_shared<SpriteWrapper>("assets/player/ms3.png");
+    auto base4 = std::make_shared<SpriteWrapper>("assets/player/ms4.png");
     auto engineBase = std::make_shared<SpriteWrapper>("assets/player/engineBase.png");
     auto engineIdle = std::make_shared<SpriteWrapper>("assets/player/engineIdle.png");
     auto enginePowering = std::make_shared<SpriteWrapper>("assets/player/enginePowering.png");
@@ -123,9 +132,15 @@ std::shared_ptr<SpriteComposite> PoolManager::createPlayerSprite() {
     comp->addChild(canon, canonAnim, { 0.f, 0.f });
     comp->addChild(engineBase, nullptr, { 0.f, 0.f });
     comp->addChild(base1, nullptr, { 0.f, 0.f });
+    comp->addChild(base2, nullptr, { 0.f, 0.f });
+    comp->addChild(base3, nullptr, { 0.f, 0.f });
+    comp->addChild(base4, nullptr, { 0.f, 0.f });
     comp->setAnimationActive(1, false);
     comp->setVisible(1, false);
     comp->setAnimationActive(2, false);
+    comp->setVisible(5, false);
+    comp->setVisible(6, false);
+    comp->setVisible(7, false);
     return comp;
 }
 
@@ -145,7 +160,10 @@ std::shared_ptr<SpriteComposite> PoolManager::createPlayerBulletSprite() {
 // FIGHTER
 
 PoolManager::BulletSpawner PoolManager::fighterBulletSpawner = [](Entity& e, Pool& p, float dt) {
-    p.spawn(e.getPosition() + sf::Vector2f(27.5f, 32.f));
+    int r = RandomGenerator::getInt(1, 2);
+    if (r == 2) r = -1;
+    p.spawn(e.getPosition() + sf::Vector2f(27.5f, 32.f) , std::make_shared<PatternState>(r,90.f,0.f,0.f,0.f,0.f,false));
+    SoundManager::playSwoosh();
 };
 
 std::shared_ptr<SpriteComposite> PoolManager::createFighterSprite() {
@@ -173,11 +191,11 @@ std::shared_ptr<SpriteComposite> PoolManager::createFighterSprite() {
 
 std::shared_ptr<SpriteComposite> PoolManager::createFighterBulletSprite() {
     auto comp = std::make_shared<SpriteComposite>();
-    auto spr = std::make_shared<SpriteWrapper>("assets/ennemies/projectile/bullet.png");
+    auto spr = std::make_shared<SpriteWrapper>("assets/ennemies/projectile/spinning bullet.png");
 
     std::vector<Frame> frames;
     for (int i = 0; i < 8; i++)
-        frames.push_back(Frame{ sf::IntRect({i * 9, 0}, {9, 12}) });
+        frames.push_back(Frame{ sf::IntRect({i * 8, 0}, {8, 8}) });
     auto anim = std::make_shared<Animation>(frames, 0.1f);
 
     comp->addChild(spr, anim, { 0.f, 0.f });
@@ -202,7 +220,8 @@ std::shared_ptr<SpriteComposite> PoolManager::createFighterDestructionSprite() {
 // SCOUT
 
 PoolManager::BulletSpawner PoolManager::scoutBulletSpawner = [](Entity& e, Pool& p, float dt) {
-    p.spawn(e.getPosition() + sf::Vector2f(27.5f, 32.f));
+    p.spawn(e.getPosition() + sf::Vector2f(27.5f, 32.f), std::make_shared<PatternState>(1, RandomGenerator::getFloat(87.f, 93.f), 0.f, 0.f, 0.f, 0.f, false));
+    SoundManager::playSwoosh();
 };
 
 std::shared_ptr<SpriteComposite> PoolManager::createScoutSprite() {
@@ -260,6 +279,7 @@ std::shared_ptr<SpriteComposite> PoolManager::createScoutDestructionSprite() {
 
 PoolManager::BulletSpawner PoolManager::frigateBulletSpawner = [](Entity& e, Pool& p, float dt) {
     p.spawn(e.getPosition() + sf::Vector2f(0.f, 32.f));
+    SoundManager::playSwoosh();
 };
 
 
@@ -317,7 +337,8 @@ std::shared_ptr<SpriteComposite> PoolManager::createFrigateDestructionSprite() {
 // TORPEDO
 
 PoolManager::BulletSpawner PoolManager::torpedoBulletSpawner = [](Entity& e, Pool& p, float dt) {
-    p.spawn(e.getPosition() + sf::Vector2f(24.f, 32.f));
+    p.spawn(e.getPosition() + sf::Vector2f(24.f, 32.f), std::make_shared<PatternState>(1, RandomGenerator::getFloat(85.f,95.f), 0.f, 0.f, 0.f, 0.f, false));
+    SoundManager::playRocket();
 };
 
 std::shared_ptr<SpriteComposite> PoolManager::createTorpedoSprite() {
@@ -374,7 +395,8 @@ std::shared_ptr<SpriteComposite> PoolManager::createTorpedoDestructionSprite() {
 // BOMBER
 
 PoolManager::BulletSpawner PoolManager::bomberBulletSpawner = [](Entity& e, Pool& p, float dt) {
-    p.spawn(e.getPosition() + sf::Vector2f(24.f, 32.f));
+    p.spawn(e.getPosition() + sf::Vector2f(24.f, 32.f), std::make_shared<PatternState>(1, RandomGenerator::getFloat(0.f, 360.f), 0.f, 0.f, 0.f, 0.f, false));
+    SoundManager::playSwoosh();
 };
 
 std::shared_ptr<SpriteComposite> PoolManager::createBomberSprite() {
@@ -424,7 +446,14 @@ std::shared_ptr<SpriteComposite> PoolManager::createBomberDestructionSprite() {
 // BATTLE CRUISER
 
 PoolManager::BulletSpawner PoolManager::battleCruiserBulletSpawner = [](Entity& e, Pool& p, float dt) {
-    p.spawn(e.getPosition() + sf::Vector2f(24.f, 32.f));
+    p.spawn(e.getPosition() + sf::Vector2f(96.f, 40.f), std::make_shared<PatternState>(1, 90.f, 0.f, 0.f, 0.f, 0.f, false));
+    p.spawn(e.getPosition() + sf::Vector2f(96.f, 60.f), std::make_shared<PatternState>(1, 90.f, 0.f, 0.f, 0.f, 0.f, false));
+    p.spawn(e.getPosition() + sf::Vector2f(96.f, 80.f), std::make_shared<PatternState>(1, 90.f, 0.f, 0.f, 0.f, 0.f, false));
+    p.spawn(e.getPosition() + sf::Vector2f(24.f, 40.f), std::make_shared<PatternState>(-1, 90.f, 0.f, 0.f, 0.f, 0.f, false));
+    p.spawn(e.getPosition() + sf::Vector2f(24.f, 60.f), std::make_shared<PatternState>(-1, 90.f, 0.f, 0.f, 0.f, 0.f, false));
+    p.spawn(e.getPosition() + sf::Vector2f(24.f, 80.f), std::make_shared<PatternState>(-1, 90.f, 0.f, 0.f, 0.f, 0.f, false));
+    p.spawn(e.getPosition() + sf::Vector2f(60.f, 88.f), std::make_shared<PatternState>(0, 90.f, 0.f, 0.f, 0.f, 0.f, false));
+    SoundManager::playSwoosh();
 };
 
 std::shared_ptr<SpriteComposite> PoolManager::createBattleCruiserSprite() {
@@ -496,14 +525,15 @@ PoolManager::PoolManager() {
         nullptr,
         nullptr,
         false,
-        PatternState()
+        PatternState(),
+        0
     );
 
     playerBullet = Pool(
         128,
         Entity::Type::Player,
         createPlayerBulletSprite(),
-        MovementPatterns::linear(-400.f),
+        MovementPatterns::linearAngleDirection(-400.f),
         nullptr,
         sf::Vector2f(0.f, 0.f),
         sf::Vector2f(16.f, 16.f),
@@ -514,7 +544,8 @@ PoolManager::PoolManager() {
         nullptr,
         nullptr,
         false,
-        PatternState()
+        PatternState(),
+        0
     );
 
     // FIGHTER
@@ -523,7 +554,7 @@ PoolManager::PoolManager() {
         128,
         Entity::Type::Enemy,
         createFighterBulletSprite(),
-        MovementPatterns::linear(250.f),
+        MovementPatterns::cShape(50.f,50.f,10.f),
         nullptr,
         sf::Vector2f(0.f, 0.f),
         sf::Vector2f(9.f, 12.f),
@@ -534,7 +565,8 @@ PoolManager::PoolManager() {
         nullptr,
         nullptr,
         false,
-        PatternState()
+        PatternState(),
+        0
     );
 
     fighterDestruction = std::make_shared<Pool>(
@@ -552,14 +584,15 @@ PoolManager::PoolManager() {
         nullptr,
         nullptr,
         true,
-        PatternState()
+        PatternState(),
+        0
     );
 
     fighter = Pool(
         32,
         Entity::Type::Enemy,
         createFighterSprite(),
-        MovementPatterns::pingPongY(200.f,100.f,500.f),
+        MovementPatterns::linearAngleDirection(10.f),
         fighterBulletSpawner,
         sf::Vector2f(32.f, 32.f),
         sf::Vector2f(0.f, 0.f),
@@ -570,7 +603,8 @@ PoolManager::PoolManager() {
         fighterBullet,
         fighterDestruction,
         false,
-        PatternState()
+        PatternState(),
+        10
     );
 
     // SCOUT
@@ -579,7 +613,7 @@ PoolManager::PoolManager() {
         128,
         Entity::Type::Enemy,
         createScoutBulletSprite(),
-        MovementPatterns::linear(250.f),
+        MovementPatterns::linearAngleDirection(250.f),
         nullptr,
         sf::Vector2f(0.f, 0.f),
         sf::Vector2f(9.f, 12.f),
@@ -591,6 +625,8 @@ PoolManager::PoolManager() {
         nullptr,
         false,
         PatternState()
+        ,
+        0
     );
 
     scoutDestruction = std::make_shared<Pool>(
@@ -608,16 +644,17 @@ PoolManager::PoolManager() {
         nullptr,
         nullptr,
         true,
-        PatternState()
+        PatternState(),
+        0
     );
 
     scout = Pool(
         32,
         Entity::Type::Enemy,
         createScoutSprite(),
-        MovementPatterns::pingPongY(200.f, 100.f, 500.f),
+        MovementPatterns::linearAngleDirection(10.f),
         scoutBulletSpawner,
-        sf::Vector2f(32.f, 32.f),
+        sf::Vector2f(32.f, 24.f),
         sf::Vector2f(0.f, 0.f),
         sf::Vector2f(16.f, 16.f),
         3,
@@ -626,7 +663,8 @@ PoolManager::PoolManager() {
         scoutBullet,
         scoutDestruction,
         false,
-        PatternState()
+        PatternState(),
+        10
     );
 
     // FRIGATE
@@ -635,18 +673,19 @@ PoolManager::PoolManager() {
         128,
         Entity::Type::Enemy,
         createFrigateBulletSprite(),
-        MovementPatterns::linear(250.f),
+        MovementPatterns::linearAngleDirectionAccelerate(10.f,5.f),
         nullptr,
         sf::Vector2f(0.f, 0.f),
-        sf::Vector2f(48.f, 12.f),
-        sf::Vector2f(8.f, 24.f),
+        sf::Vector2f(40.f, 12.f),
+        sf::Vector2f(12.f, 24.f),
         1,
         1,
         0.f,
         nullptr,
         nullptr,
         false,
-        PatternState()
+        PatternState(),
+        0
     );
 
     frigateDestruction = std::make_shared<Pool>(
@@ -664,25 +703,27 @@ PoolManager::PoolManager() {
         nullptr,
         nullptr,
         true,
-        PatternState()
+        PatternState(),
+        0
     );
 
     frigate = Pool(
         32,
         Entity::Type::Enemy,
         createFrigateSprite(),
-        MovementPatterns::pingPongY(200.f, 100.f, 500.f),
+        MovementPatterns::linearAngleDirection(10.f),
         frigateBulletSpawner,
-        sf::Vector2f(32.f, 32.f),
+        sf::Vector2f(40.f, 32.f),
         sf::Vector2f(0.f, 0.f),
-        sf::Vector2f(16.f, 16.f),
+        sf::Vector2f(12.f, 16.f),
         3,
         0,
         0.5f,
         frigateBullet,
         frigateDestruction,
         false,
-        PatternState()
+        PatternState(),
+        10
     );
 
     // TORPEDO
@@ -691,7 +732,7 @@ PoolManager::PoolManager() {
         128,
         Entity::Type::Enemy,
         createTorpedoBulletSprite(),
-        MovementPatterns::linear(250.f),
+        MovementPatterns::linearAngleDirectionAccelerate(0.f,6.f),
         nullptr,
         sf::Vector2f(0.f, 0.f),
         sf::Vector2f(16.f, 32.f),
@@ -702,7 +743,8 @@ PoolManager::PoolManager() {
         nullptr,
         nullptr,
         false,
-        PatternState()
+        PatternState(),
+        0
     );
 
     torpedoDestruction = std::make_shared<Pool>(
@@ -720,25 +762,27 @@ PoolManager::PoolManager() {
         nullptr,
         nullptr,
         true,
-        PatternState()
+        PatternState(),
+        0
     );
 
     torpedo = Pool(
         32,
         Entity::Type::Enemy,
         createTorpedoSprite(),
-        MovementPatterns::pingPongY(200.f, 100.f, 500.f),
+        MovementPatterns::linearAngleDirection(10.f),
         torpedoBulletSpawner,
-        sf::Vector2f(32.f, 32.f),
+        sf::Vector2f(56.f, 16.f),
         sf::Vector2f(0.f, 0.f),
-        sf::Vector2f(16.f, 16.f),
+        sf::Vector2f(4.f, 24.f),
         3,
         0,
         0.5f,
         torpedoBullet,
         torpedoDestruction,
         false,
-        PatternState()
+        PatternState(),
+        10
     );
 
     // BOMBER 
@@ -747,7 +791,7 @@ PoolManager::PoolManager() {
         128,
         Entity::Type::Enemy,
         createBomberBulletSprite(),
-        MovementPatterns::linear(250.f),
+        MovementPatterns::linearAngleDirection(15.f),
         nullptr,
         sf::Vector2f(0.f, 0.f),
         sf::Vector2f(16.f, 16.f),
@@ -758,7 +802,8 @@ PoolManager::PoolManager() {
         nullptr,
         nullptr,
         false,
-        PatternState()
+        PatternState(),
+        0
     );
 
     bomberDestruction = std::make_shared<Pool>(
@@ -776,25 +821,27 @@ PoolManager::PoolManager() {
         nullptr,
         nullptr,
         true,
-        PatternState()
+        PatternState(),
+        0
     );
 
     bomber = Pool(
         32,
         Entity::Type::Enemy,
         createBomberSprite(),
-        MovementPatterns::pingPongY(200.f, 100.f, 500.f),
+        MovementPatterns::linearAngleDirection(10.f),
         bomberBulletSpawner,
         sf::Vector2f(32.f, 32.f),
         sf::Vector2f(0.f, 0.f),
         sf::Vector2f(16.f, 16.f),
         3,
         0,
-        0.5f,
+        10.f,
         bomberBullet,
         bomberDestruction,
         false,
-        PatternState()
+        PatternState(),
+        10
     );
 
     // BATTLE CRUISER 
@@ -803,7 +850,7 @@ PoolManager::PoolManager() {
         128,
         Entity::Type::Enemy,
         createBattleCruiserBulletSprite(),
-        MovementPatterns::linear(250.f),
+        MovementPatterns::cShape(50.f, 50.f, 10.f),
         nullptr,
         sf::Vector2f(0.f, 0.f),
         sf::Vector2f(8.f, 8.f),
@@ -814,7 +861,8 @@ PoolManager::PoolManager() {
         nullptr,
         nullptr,
         false,
-        PatternState()
+        PatternState(),
+        0
     );
 
     battleCruiserDestruction = std::make_shared<Pool>(
@@ -832,24 +880,26 @@ PoolManager::PoolManager() {
         nullptr,
         nullptr,
         true,
-        PatternState()
+        PatternState(),
+        0
     );
 
     battleCruiser = Pool(
         32,
         Entity::Type::Enemy,
         createBattleCruiserSprite(),
-        MovementPatterns::pingPongY(200.f, 100.f, 500.f),
+        MovementPatterns::linearAngleDirection(10.f),
         battleCruiserBulletSpawner,
-        sf::Vector2f(64.f, 64.f),
+        sf::Vector2f(64.f, 88.f),
         sf::Vector2f(0.f, 0.f),
-        sf::Vector2f(32.f, 32.f),
+        sf::Vector2f(32.f, 16.f),
         3,
         0,
         0.5f,
         battleCruiserBullet,
         battleCruiserDestruction,
         false,
-        PatternState()
+        PatternState(),
+        10
     );
 }

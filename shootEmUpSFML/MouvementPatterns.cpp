@@ -7,25 +7,53 @@ namespace MovementPatterns {
 
     constexpr float M_PI = 3.14159265f;
 
-    MovementPattern linear(float speed) {
-        return [speed](Entity& e, float dt, PatternState&) {
-            e.move({ 0.f, speed * dt });
+    MovementPattern linearAngleDirection(float speed) {
+        return [speed](Entity& e, float dt, PatternState& state) {
+            if (!state.init) {
+                state.init = true;
+                float rad = state.angle * 3.14159265f / 180.f;
+                state.xVelocity = std::cos(rad) * speed;
+                state.yVelocity = std::sin(rad) * speed;
+            }
+
+            e.move({ state.xVelocity * dt, state.yVelocity * dt });
             };
     }
 
-    MovementPattern oscillate(float speed, float amplitude) {
-        return [speed, amplitude](Entity& e, float dt, PatternState& s) {
-            s.time += dt;
-            e.move({ amplitude * std::sin(s.time), speed * dt });
+    MovementPattern linearAngleDirectionAccelerate(float speed, float accelerate) {
+        return [speed, accelerate](Entity& e, float dt, PatternState& state) {
+
+            if (!state.init) {
+                state.init = true;
+                float rad = state.angle * 3.14159265f / 180.f;
+                state.acc1 = std::cos(rad);
+                state.acc2 = std::sin(rad);
+
+                state.xVelocity = state.acc1 * speed;
+                state.yVelocity = state.acc2 * speed;
+            }
+
+            e.move({ state.xVelocity * dt, state.yVelocity * dt });
+            state.xVelocity += state.acc1 * accelerate;
+            state.yVelocity += state.acc2 * accelerate;
             };
     }
 
-    MovementPattern pingPongY(float speed, float minY, float maxY) {
-        return [speed, minY, maxY](Entity& e, float dt, PatternState& s) {
-            e.move({ 0.f, speed * s.direction * dt });
-            if (e.getPosition().y > maxY) s.direction = -1;
-            if (e.getPosition().y < minY) s.direction = 1;
+
+    MovementPattern cShape(float speedX, float speedY, float deltaSpeedX) {
+        return [speedX, speedY, deltaSpeedX](Entity& e, float dt, PatternState& state) {
+
+            if (!state.init) {
+                state.init = true;
+                state.xVelocity = speedX;
+            }
+            e.move({ state.xVelocity * state.direction * dt, speedY * dt });
+
+            state.xVelocity -= deltaSpeedX * dt;
+
             };
+
     }
 
+    
 }

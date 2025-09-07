@@ -135,3 +135,11 @@ void SpriteComposite::draw(sf::RenderTarget& target, sf::RenderStates states) co
         target.draw(sprite, states);
     }
 }
+
+size_t SpriteComposite::getChildrenCount() {
+    return m_children.size();
+}
+
+SpriteComposite::Child SpriteComposite::getChild(int index) {
+    return m_children[index];
+}

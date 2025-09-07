@@ -47,10 +47,15 @@ public:
     Type getType() const;
 
     int getHealth() const;
+    int getInitHealth() const;
+    float getHealthPercent() const;
     void setHealth(int hp);
     void takeDamage(int dmg);
     void setDamage(int dmg);
     int getDamage();
+
+    void setScore(int score);
+    int getScore();
 
     bool hurtBy(const Entity& proj) const;
 
@@ -79,9 +84,12 @@ private:
 
     Type m_type;
     int m_health = 1;
+    int m_initHealth = 1;
     int m_damage = 0;
     bool actived = false;
     bool m_desactivateAfterAnimation = false;
+
+    int score = 0;
 
     inline static std::vector<Entity*> s_players{};
     inline static std::vector<Entity*> s_enemies{};

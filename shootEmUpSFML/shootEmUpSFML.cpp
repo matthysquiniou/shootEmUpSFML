@@ -3,6 +3,9 @@
 #include "Pool.hpp"
 #include "ColisionManager.hpp"
 #include "SoundManager.hpp"
+#include "BackgroundManager.hpp"
+#include "EnemySpawner.hpp"
+#include "ScoreManager.hpp"
 #include <iostream>
 
 void drawHitboxes(sf::RenderWindow& window, const std::vector<std::shared_ptr<Entity>>& entities) {
@@ -26,19 +29,33 @@ void drawHitboxes(sf::RenderWindow& window, const std::vector<std::shared_ptr<En
 }
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode({ 800, 600 }), "Player vs Enemy");
+    bool displayBox = true;
+    sf::RenderWindow window(sf::VideoMode({ 1280, 720 }), "Space shooter");
 
     SoundManager::init();
     SoundManager::playBackground();
+
+    BackgroundManager bgManager;
+    bgManager.addBackground("assets/background/bg1.png", 9, 2.f, 5.f, 100);
+    bgManager.addBackground("assets/background/bg2.png", 9, 0.01f, 25.f, 150);
+
+    ScoreManager::reset();
 
     window.setFramerateLimit(60);
 
     PoolManager pools;
 
+    EnemySpawner spawner(pools);
+
+    spawner.addEnemyType(10, [&](sf::Vector2f pos) { pools.fighter.spawn(pos); });
+    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.scout.spawn(pos); });
+    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.bomber.spawn(pos); });
+    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.frigate.spawn(pos); });
+    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.torpedo.spawn(pos); });
+    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.battleCruiser.spawn(pos); });
+
     auto player = pools.player.spawn({ 400.f, 500.f });
     auto& playerComp = player->getComposite();
-
-    pools.battleCruiser.spawn({ 400.f, 100.f });
 
     auto colisionManager = ColisionManager(pools);
 
@@ -49,6 +66,9 @@ int main() {
     sf::Clock clock;
     while (window.isOpen()) {
         float dt = clock.restart().asSeconds();
+
+        spawner.update(dt);
+
         timeSinceLastShot += dt;
 
         sf::Vector2f velocity(0.f, 0.f);
@@ -70,10 +90,10 @@ int main() {
             }
         }
 
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))  velocity.x -= 200.f * dt;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) velocity.x += 200.f * dt;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))    velocity.y -= 200.f * dt;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down))  velocity.y += 200.f * dt;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))  velocity.x -= 400.f * dt;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) velocity.x += 400.f * dt;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))    velocity.y -= 400.f * dt;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down))  velocity.y += 400.f * dt;
 
         if (velocity.x == 0 && velocity.y == 0) {
             playerComp.setAnimationActive(1, false);
@@ -96,36 +116,38 @@ int main() {
             SoundManager::playSwoosh();
         }
 
-        colisionManager.update();
+        bgManager.update(dt);
 
         pools.player.update(dt);
-        pools.playerBullet.update(dt);
-
         pools.fighter.update(dt);
-        pools.fighterBullet->update(dt);
-        pools.fighterDestruction->update(dt);
-
         pools.scout.update(dt);
-        pools.scoutBullet->update(dt);
-        pools.scoutDestruction->update(dt);
-
         pools.frigate.update(dt);
-        pools.frigateBullet->update(dt);
-        pools.frigateDestruction->update(dt);
-
         pools.torpedo.update(dt);
-        pools.torpedoBullet->update(dt);
-        pools.torpedoDestruction->update(dt);
-
         pools.bomber.update(dt);
-        pools.bomberBullet->update(dt);
-        pools.bomberDestruction->update(dt);
-
         pools.battleCruiser.update(dt);
+
+        pools.playerBullet.update(dt);
+        pools.fighterBullet->update(dt);
+        pools.scoutBullet->update(dt);
+        pools.frigateBullet->update(dt);
+        pools.torpedoBullet->update(dt);
+        pools.bomberBullet->update(dt);
         pools.battleCruiserBullet->update(dt);
+
+        colisionManager.update();
+
+        pools.fighterDestruction->update(dt);
+        pools.scoutDestruction->update(dt);
+        pools.frigateDestruction->update(dt);
+        pools.torpedoDestruction->update(dt);
+        pools.bomberDestruction->update(dt);
         pools.battleCruiserDestruction->update(dt);
 
         window.clear();
+
+        ScoreManager::draw(window);
+
+        window.draw(bgManager);
 
         pools.player.draw(window);
         pools.playerBullet.draw(window);
@@ -137,6 +159,10 @@ int main() {
         pools.scout.draw(window);
         pools.scoutBullet->draw(window);
         pools.scoutDestruction->draw(window);
+
+        pools.frigate.draw(window);
+        pools.frigateBullet->draw(window);
+        pools.frigateDestruction->draw(window);
 
         pools.torpedo.draw(window);
         pools.torpedoBullet->draw(window);
@@ -150,20 +176,24 @@ int main() {
         pools.battleCruiserBullet->draw(window);
         pools.battleCruiserDestruction->draw(window);
 
-        drawHitboxes(window, pools.player.getPool());
-        drawHitboxes(window, pools.playerBullet.getPool());
-        drawHitboxes(window, pools.fighter.getPool());
-        drawHitboxes(window, pools.fighterBullet->getPool());
-        drawHitboxes(window, pools.scout.getPool());
-        drawHitboxes(window, pools.scoutBullet->getPool());
-        drawHitboxes(window, pools.frigate.getPool());
-        drawHitboxes(window, pools.frigateBullet->getPool());
-        drawHitboxes(window, pools.torpedo.getPool());
-        drawHitboxes(window, pools.torpedoBullet->getPool());
-        drawHitboxes(window, pools.bomber.getPool());
-        drawHitboxes(window, pools.bomberBullet->getPool());
-        drawHitboxes(window, pools.battleCruiser.getPool());
-        drawHitboxes(window, pools.battleCruiserBullet->getPool());
+
+        if (displayBox)
+        {
+            drawHitboxes(window, pools.player.getPool());
+            drawHitboxes(window, pools.playerBullet.getPool());
+            drawHitboxes(window, pools.fighter.getPool());
+            drawHitboxes(window, pools.fighterBullet->getPool());
+            drawHitboxes(window, pools.scout.getPool());
+            drawHitboxes(window, pools.scoutBullet->getPool());
+            drawHitboxes(window, pools.frigate.getPool());
+            drawHitboxes(window, pools.frigateBullet->getPool());
+            drawHitboxes(window, pools.torpedo.getPool());
+            drawHitboxes(window, pools.torpedoBullet->getPool());
+            drawHitboxes(window, pools.bomber.getPool());
+            drawHitboxes(window, pools.bomberBullet->getPool());
+            drawHitboxes(window, pools.battleCruiser.getPool());
+            drawHitboxes(window, pools.battleCruiserBullet->getPool());
+        }
 
         window.display();
     }

@@ -3,7 +3,7 @@
 void SoundManager::init() {
     if (!bufferBackground.loadFromFile("assets/sound/background.mp3"))
         throw std::runtime_error("Impossible de charger background.mp3");
-    soundBackground.setVolume(10.f);
+    soundBackground.setVolume(2.f);
     soundBackground.setLooping(true);
 
     if (!bufferDestruction.loadFromFile("assets/sound/destruction.wav"))
@@ -20,11 +20,11 @@ void SoundManager::init() {
 
     if (!bufferRocket.loadFromFile("assets/sound/rocket.wav"))
         throw std::runtime_error("Impossible de charger rocket.wav");
-    soundRocket.setVolume(10.f);
+    soundRocket.setVolume(1.5f);
 
     if (!bufferSwoosh.loadFromFile("assets/sound/swoosh.wav"))
         throw std::runtime_error("Impossible de charger swoosh.wav");
-    soundSwoosh.setVolume(75.f);
+    soundSwoosh.setVolume(60.f);
 }
 
 void SoundManager::playBackground() { soundBackground.play(); }

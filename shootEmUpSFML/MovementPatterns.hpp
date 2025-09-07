@@ -4,17 +4,22 @@
 class Entity;
 
 struct PatternState {
-    float time = 0.f;
     int direction = 1;
-    float angle = 0.f;
+    float angle = 90.f;
+    float yVelocity = 0.f;
+    float xVelocity = 0.f;
+    float acc1 = 0.f;
+    float acc2 = 0.f;
+    bool init = false;
 };
 
 using MovementPattern = std::function<void(Entity&, float, PatternState&)>;
 
 namespace MovementPatterns {
 
-    MovementPattern linear(float speed);
-    MovementPattern oscillate(float speed, float amplitude);
-    MovementPattern pingPongY(float speed, float minY, float maxY);
+    MovementPattern linearAngleDirection(float speed);
 
+    MovementPattern linearAngleDirectionAccelerate(float speed, float accelerate);
+
+    MovementPattern cShape(float speedX, float speedY, float deltaSpeedX);
 } 

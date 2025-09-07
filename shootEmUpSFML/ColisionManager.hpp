@@ -10,4 +10,6 @@ public:
     PoolManager pools;
 
     void update();
+
+    void changePlayerSprite(std::shared_ptr<Entity> player);
 };

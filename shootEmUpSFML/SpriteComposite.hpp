@@ -66,6 +66,8 @@ public:
     bool isAnimationGoing();
     void update(float dt);
     void stopAnimationAfterLoop(std::size_t index, bool visibleToggle = false);
+    size_t getChildrenCount();
+    Child getChild(int index);
 
 private:
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;

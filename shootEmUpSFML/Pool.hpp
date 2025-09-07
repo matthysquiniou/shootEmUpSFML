@@ -25,7 +25,8 @@ public:
         std::shared_ptr<Pool> bulletPool = nullptr,
         std::shared_ptr<Pool> destructionPool = nullptr,
         bool desactivateAfterAnimation = false,
-        PatternState patternState = PatternState()
+        PatternState patternState = PatternState(),
+        int score = 1
     );
 
     std::shared_ptr<Entity> spawn(const sf::Vector2f& pos, std::shared_ptr<PatternState> ps = nullptr );
@@ -49,6 +50,7 @@ private:
     std::shared_ptr<Pool> destructionPool;
     bool desactivateAfterAnimation;
     PatternState patternState;
+    int score;
 };
 
 class PoolManager {

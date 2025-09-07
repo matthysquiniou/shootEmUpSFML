@@ -1,14 +1,11 @@
 #include "Entity.hpp"
 #include "Pool.hpp"
-#include "SoundManager.hpp"
 #include <iostream>
 
 
-// --- ctor/dtor ---
 Entity::Entity(Type type) : m_type(type) {}
 Entity::~Entity() = default;
 
-// --- setters ---
 void Entity::setComposite(SpriteComposite composite) {
     m_composite = std::move(composite);
 }
@@ -51,7 +48,6 @@ void Entity::setBulletPool(std::shared_ptr<Pool> pool) {
     bulletPool = pool;
 }
 
-// --- update ---
 void Entity::update(float dt) {
     if (m_pattern) {
         m_pattern(*this, dt, m_patternState);
@@ -75,7 +71,6 @@ void Entity::update(float dt) {
     m_composite.update(dt);
 }
 
-// --- transforms ---
 void Entity::move(const sf::Vector2f& offset) {
     m_composite.move(offset);
 }
@@ -88,11 +83,18 @@ sf::Vector2f Entity::getPosition() const {
     return m_composite.getPosition();
 }
 
+void Entity::setScore(int s) {
+    score = s;
+}
+
+int Entity::getScore() {
+    return score;
+}
+
 void Entity::setDesactivateAfterAnimation(bool desactivateAfterAnimation) {
     m_desactivateAfterAnimation = desactivateAfterAnimation;
 }
 
-// --- getters ---
 const sf::FloatRect& Entity::getHitbox() const { return m_hitbox; }
 const sf::FloatRect& Entity::getHurtbox() const { return m_hurtbox; }
 
@@ -100,7 +102,12 @@ SpriteComposite& Entity::getComposite() { return m_composite; }
 Entity::Type Entity::getType() const { return m_type; }
 
 int Entity::getHealth() const { return m_health; }
-void Entity::setHealth(int hp) { m_health = hp; }
+int Entity::getInitHealth() const { return m_initHealth; }
+float Entity::getHealthPercent() const { return  static_cast<float>(m_health) / static_cast<float>(m_initHealth); }
+void Entity::setHealth(int hp) {
+    m_health = hp;
+    m_initHealth = hp;
+}
 void Entity::takeDamage(int dmg) { m_health -= dmg; }
 void Entity::setDamage(int dmg) { m_damage = dmg; }
 int Entity::getDamage() { return m_damage; }
@@ -109,12 +116,10 @@ bool Entity::hurtBy(const Entity& proj) const {
     return m_hitbox.findIntersection(proj.m_hurtbox).has_value();
 }
 
-// --- activity ---
 bool Entity::isActive() { return actived; }
 void Entity::activate() { actived = true; }
 void Entity::deactivate() { actived = false; }
 
-// --- draw ---
 void Entity::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     target.draw(m_composite, states);
 }
