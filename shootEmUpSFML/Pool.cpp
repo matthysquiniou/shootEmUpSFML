@@ -238,7 +238,7 @@ std::shared_ptr<SpriteComposite> PoolManager::createScoutSprite() {
     std::vector<Frame> weaponFrames;
     for (int i = 0; i < 7; i++)
         weaponFrames.push_back(Frame{ sf::IntRect({i * 64, 0}, {64, 64}) });
-    auto weaponAnim = std::make_shared<Animation>(weaponFrames, 0.1f);
+    auto weaponAnim = std::make_shared<Animation>(weaponFrames, 0.3f);
 
     comp->addChild(main, nullptr, { 0.f, 0.f });
     comp->addChild(engine, engineAnim, { 0.f, 0.f });
@@ -297,7 +297,7 @@ std::shared_ptr<SpriteComposite> PoolManager::createFrigateSprite() {
     std::vector<Frame> weaponFrames;
     for (int i = 0; i < 9; i++)
         weaponFrames.push_back(Frame{ sf::IntRect({i * 64, 0}, {64, 64}) });
-    auto weaponAnim = std::make_shared<Animation>(weaponFrames, 0.1f);
+    auto weaponAnim = std::make_shared<Animation>(weaponFrames, 0.3f);
 
     comp->addChild(main, nullptr, { 0.f, 0.f });
     comp->addChild(engine, engineAnim, { 0.f, 0.f });
@@ -355,7 +355,7 @@ std::shared_ptr<SpriteComposite> PoolManager::createTorpedoSprite() {
     std::vector<Frame> weaponFrames;
     for (int i = 0; i < 16; i++)
         weaponFrames.push_back(Frame{ sf::IntRect({i * 64, 0}, {64, 64}) });
-    auto weaponAnim = std::make_shared<Animation>(weaponFrames, 0.1f);
+    auto weaponAnim = std::make_shared<Animation>(weaponFrames, 0.3f);
 
     comp->addChild(main, nullptr, { 0.f, 0.f });
     comp->addChild(engine, engineAnim, { 0.f, 0.f });
@@ -470,7 +470,7 @@ std::shared_ptr<SpriteComposite> PoolManager::createBattleCruiserSprite() {
     std::vector<Frame> weaponFrames;
     for (int i = 0; i < 9; i++)
         weaponFrames.push_back(Frame{ sf::IntRect({i * 128, 0}, {128, 128}) });
-    auto weaponAnim = std::make_shared<Animation>(weaponFrames, 0.1f);
+    auto weaponAnim = std::make_shared<Animation>(weaponFrames, 0.3f);
 
     comp->addChild(main, nullptr, { 0.f, 0.f });
     comp->addChild(engine, engineAnim, { 0.f, 0.f });
@@ -519,7 +519,7 @@ PoolManager::PoolManager() {
         sf::Vector2f(32.f, 32.f),
         sf::Vector2f(0.f, 0.f),
         sf::Vector2f(8.f, 8.f),
-        10,
+        20,
         0,
         0.f,
         nullptr,
@@ -551,7 +551,7 @@ PoolManager::PoolManager() {
     // FIGHTER
 
     fighterBullet = std::make_shared<Pool>(
-        128,
+        256,
         Entity::Type::Enemy,
         createFighterBulletSprite(),
         MovementPatterns::cShape(50.f,50.f,10.f),
@@ -592,14 +592,14 @@ PoolManager::PoolManager() {
         32,
         Entity::Type::Enemy,
         createFighterSprite(),
-        MovementPatterns::linearAngleDirection(10.f),
+        MovementPatterns::moveToRandom(100.f,50.f,1200.f,50.f,500.f),
         fighterBulletSpawner,
         sf::Vector2f(32.f, 32.f),
         sf::Vector2f(0.f, 0.f),
         sf::Vector2f(16.f, 16.f),
         3,
         0,
-        0.5f,
+        2.f,
         fighterBullet,
         fighterDestruction,
         false,
@@ -610,7 +610,7 @@ PoolManager::PoolManager() {
     // SCOUT
 
     scoutBullet = std::make_shared<Pool>(
-        128,
+        256,
         Entity::Type::Enemy,
         createScoutBulletSprite(),
         MovementPatterns::linearAngleDirection(250.f),
@@ -652,14 +652,14 @@ PoolManager::PoolManager() {
         32,
         Entity::Type::Enemy,
         createScoutSprite(),
-        MovementPatterns::linearAngleDirection(10.f),
+        MovementPatterns::moveToRandom(150.f, 50.f, 1200.f, 50.f, 500.f),
         scoutBulletSpawner,
         sf::Vector2f(32.f, 24.f),
         sf::Vector2f(0.f, 0.f),
         sf::Vector2f(16.f, 16.f),
-        3,
+        2,
         0,
-        0.5f,
+        3.f,
         scoutBullet,
         scoutDestruction,
         false,
@@ -670,7 +670,7 @@ PoolManager::PoolManager() {
     // FRIGATE
 
     frigateBullet = std::make_shared<Pool>(
-        128,
+        256,
         Entity::Type::Enemy,
         createFrigateBulletSprite(),
         MovementPatterns::linearAngleDirectionAccelerate(10.f,5.f),
@@ -679,7 +679,7 @@ PoolManager::PoolManager() {
         sf::Vector2f(40.f, 12.f),
         sf::Vector2f(12.f, 24.f),
         1,
-        1,
+        2,
         0.f,
         nullptr,
         nullptr,
@@ -711,34 +711,34 @@ PoolManager::PoolManager() {
         32,
         Entity::Type::Enemy,
         createFrigateSprite(),
-        MovementPatterns::linearAngleDirection(10.f),
+        MovementPatterns::bounce(50.f, 50.f, 50.f, 1200.f, 120.f, 300.f),
         frigateBulletSpawner,
         sf::Vector2f(40.f, 32.f),
         sf::Vector2f(0.f, 0.f),
         sf::Vector2f(12.f, 16.f),
-        3,
+        7,
         0,
-        0.5f,
+        4.f,
         frigateBullet,
         frigateDestruction,
         false,
         PatternState(),
-        10
+        25
     );
 
     // TORPEDO
 
     torpedoBullet = std::make_shared<Pool>(
-        128,
+        256,
         Entity::Type::Enemy,
         createTorpedoBulletSprite(),
-        MovementPatterns::linearAngleDirectionAccelerate(0.f,6.f),
+        MovementPatterns::linearAngleDirectionAccelerate(0.f,4.f),
         nullptr,
         sf::Vector2f(0.f, 0.f),
         sf::Vector2f(16.f, 32.f),
         sf::Vector2f(0.f, 0.f),
         1,
-        1,
+        3,
         0.f,
         nullptr,
         nullptr,
@@ -770,25 +770,25 @@ PoolManager::PoolManager() {
         32,
         Entity::Type::Enemy,
         createTorpedoSprite(),
-        MovementPatterns::linearAngleDirection(10.f),
+        MovementPatterns::moveToRandom(15.f, 50.f, 1200.f, 50.f, 75.f),
         torpedoBulletSpawner,
         sf::Vector2f(56.f, 16.f),
         sf::Vector2f(0.f, 0.f),
         sf::Vector2f(4.f, 24.f),
-        3,
+        5,
         0,
-        0.5f,
+        5.f,
         torpedoBullet,
         torpedoDestruction,
         false,
         PatternState(),
-        10
+        15
     );
 
     // BOMBER 
 
     bomberBullet = std::make_shared<Pool>(
-        128,
+        256,
         Entity::Type::Enemy,
         createBomberBulletSprite(),
         MovementPatterns::linearAngleDirection(15.f),
@@ -797,7 +797,7 @@ PoolManager::PoolManager() {
         sf::Vector2f(16.f, 16.f),
         sf::Vector2f(0.f, 0.f),
         1,
-        1,
+        5,
         0.f,
         nullptr,
         nullptr,
@@ -829,19 +829,19 @@ PoolManager::PoolManager() {
         32,
         Entity::Type::Enemy,
         createBomberSprite(),
-        MovementPatterns::linearAngleDirection(10.f),
+        MovementPatterns::moveToRandom(100.f, 50.f, 1200.f, 50.f, 700.f),
         bomberBulletSpawner,
         sf::Vector2f(32.f, 32.f),
         sf::Vector2f(0.f, 0.f),
         sf::Vector2f(16.f, 16.f),
-        3,
+        4,
         0,
         10.f,
         bomberBullet,
         bomberDestruction,
         false,
         PatternState(),
-        10
+        15
     );
 
     // BATTLE CRUISER 
@@ -888,18 +888,18 @@ PoolManager::PoolManager() {
         32,
         Entity::Type::Enemy,
         createBattleCruiserSprite(),
-        MovementPatterns::linearAngleDirection(10.f),
+        MovementPatterns::moveToRandom(10.f, 50.f, 1200.f, 50.f, 700.f),
         battleCruiserBulletSpawner,
         sf::Vector2f(64.f, 88.f),
         sf::Vector2f(0.f, 0.f),
         sf::Vector2f(32.f, 16.f),
-        3,
+        15,
         0,
-        0.5f,
+        3.f,
         battleCruiserBullet,
         battleCruiserDestruction,
         false,
         PatternState(),
-        10
+        25
     );
 }

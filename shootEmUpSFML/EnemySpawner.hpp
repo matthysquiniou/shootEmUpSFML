@@ -24,11 +24,11 @@ private:
 
     std::vector<EnemyType> m_enemyTypes;
 
-    int m_points = 0;
+    int m_points = 20;
     float m_pointGainTimer = 0.f;
-    float m_pointGainInterval = 10.f; 
-    int m_pointGainAmount = 50;    
-    float m_pointMultiplier = 1.05f; 
+    float m_pointGainInterval = 12.f; 
+    int m_pointGainAmount = 30;    
+    float m_pointMultiplier = 1.4f; 
 
     std::mt19937 m_rng;
 

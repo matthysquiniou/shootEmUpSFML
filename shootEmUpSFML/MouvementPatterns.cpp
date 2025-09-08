@@ -1,6 +1,7 @@
 #include "MovementPatterns.hpp"
 #include <cmath>
 #include "Entity.hpp"
+#include "randomGenerator.hpp"
 #include <iostream>
 
 namespace MovementPatterns {
@@ -53,6 +54,61 @@ namespace MovementPatterns {
 
             };
 
+    }
+
+    MovementPattern moveToRandom(float speed, float minX, float maxX, float minY, float maxY) {
+        return [=](Entity& e, float dt, PatternState& state) {
+            auto pos = e.getPosition();
+
+            if (!state.init) {
+                state.init = true;
+                state.acc1 = RandomGenerator::getFloat(minX, maxX);
+                state.acc2 = RandomGenerator::getFloat(minY, maxY);
+            }
+
+            float dx = state.acc1 - pos.x;
+            float dy = state.acc2 - pos.y;
+            float dist = std::sqrt(dx * dx + dy * dy);
+
+            if (dist < 1.f) {
+                state.acc1 = RandomGenerator::getFloat(minX, maxX);
+                state.acc2 = RandomGenerator::getFloat(minY, maxY);
+            }
+            else {
+                float dirX = dx / dist;
+                float dirY = dy / dist;
+
+                e.move({ dirX * speed * dt, dirY * speed * dt });
+            }
+            };
+    }
+
+    MovementPattern bounce(float speedX, float speedY, float minX, float maxX, float minY, float maxY) {
+        return [=](Entity& e, float dt, PatternState& state) {
+            auto pos = e.getPosition();
+
+            if (!state.init) {
+                state.init = true;
+                state.xVelocity = speedX;
+                state.yVelocity = speedY;
+            }
+
+            ;
+
+            if (pos.x > maxX) {
+                state.xVelocity = -std::abs(state.xVelocity);
+            } else if (pos.x < minX) {
+                state.xVelocity = std::abs(state.xVelocity);
+            }
+
+            if (pos.y > maxY) {
+                state.yVelocity = -std::abs(state.yVelocity);
+            } else if (pos.y < minY) {
+                state.yVelocity = std::abs(state.yVelocity);
+            }
+
+            e.move({ state.xVelocity * dt, state.yVelocity * dt });
+            };
     }
 
     

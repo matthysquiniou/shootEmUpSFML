@@ -32,7 +32,7 @@ void drawHitboxes(sf::RenderWindow& window, const std::vector<std::shared_ptr<En
 }
 
 int main() {
-    bool displayBox = true;
+    bool displayBox = false;
     sf::RenderWindow window(sf::VideoMode({ 1280, 720 }), "Space shooter");
 
     SoundManager::init();
@@ -49,15 +49,15 @@ int main() {
     PoolManager pools;
     EnemySpawner spawner(pools);
 
-    auto player = pools.player.spawn({ 400.f, 500.f });
-    player->deactivate();
-    auto& playerComp = player->getComposite();
+    std::shared_ptr<Entity> player;
 
     auto colisionManager = ColisionManager(pools);
 
     bool shooting = false;
     float timeSinceLastShot = 0.f;
     const float fireRate = 0.2f;
+    float minX = 10.f, maxX = 1250.f;
+    float minY = 10.f, maxY = 690.f;
 
     sf::Clock clock;
 
@@ -80,11 +80,11 @@ int main() {
                     colisionManager = ColisionManager(pools);
                     spawner = EnemySpawner(pools);
                     spawner.addEnemyType(10, [&](sf::Vector2f pos) { pools.fighter.spawn(pos); });
-                    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.scout.spawn(pos); });
-                    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.bomber.spawn(pos); });
+                    spawner.addEnemyType(10, [&](sf::Vector2f pos) { pools.scout.spawn(pos); });
+                    spawner.addEnemyType(15, [&](sf::Vector2f pos) { pools.bomber.spawn(pos); });
+                    spawner.addEnemyType(15, [&](sf::Vector2f pos) { pools.torpedo.spawn(pos); });
                     spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.frigate.spawn(pos); });
-                    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.torpedo.spawn(pos); });
-                    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.battleCruiser.spawn(pos); });
+                    spawner.addEnemyType(30, [&](sf::Vector2f pos) { pools.battleCruiser.spawn(pos); });
 
                     player = pools.player.spawn({ 400.f, 500.f });
                     shooting = false;
@@ -97,11 +97,11 @@ int main() {
                     colisionManager = ColisionManager(pools);
                     spawner = EnemySpawner(pools);
                     spawner.addEnemyType(10, [&](sf::Vector2f pos) { pools.fighter.spawn(pos); });
-                    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.scout.spawn(pos); });
-                    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.bomber.spawn(pos); });
+                    spawner.addEnemyType(10, [&](sf::Vector2f pos) { pools.scout.spawn(pos); });
+                    spawner.addEnemyType(15, [&](sf::Vector2f pos) { pools.bomber.spawn(pos); });
+                    spawner.addEnemyType(15, [&](sf::Vector2f pos) { pools.torpedo.spawn(pos); });
                     spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.frigate.spawn(pos); });
-                    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.torpedo.spawn(pos); });
-                    spawner.addEnemyType(20, [&](sf::Vector2f pos) { pools.battleCruiser.spawn(pos); });
+                    spawner.addEnemyType(30, [&](sf::Vector2f pos) { pools.battleCruiser.spawn(pos); });
 
                     player = pools.player.spawn({ 400.f, 500.f });
                     shooting = false;
@@ -111,12 +111,14 @@ int main() {
                 if (auto pressed = event->getIf<sf::Event::MouseButtonPressed>()) {
                     if (pressed->button == sf::Mouse::Button::Left) {
                         shooting = true;
+                        auto& playerComp = player->getComposite();
                         playerComp.setAnimationActive(2, true);
                     }
                 }
                 if (auto released = event->getIf<sf::Event::MouseButtonReleased>()) {
                     if (released->button == sf::Mouse::Button::Left) {
                         shooting = false;
+                        auto& playerComp = player->getComposite();
                         playerComp.stopAnimationAfterLoop(2);
                     }
                 }
@@ -138,14 +140,30 @@ int main() {
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) velocity.x += 400.f * dt;
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))    velocity.y -= 400.f * dt;
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down))  velocity.y += 400.f * dt;
+            auto playerPos = player->getPosition();
+
+            if (playerPos.x <= minX && velocity.x < 0) {     
+                velocity.x = 0;                     
+            }
+            else if (playerPos.x >= maxX && velocity.x > 0) { 
+                velocity.x = 0;                     
+            }
+
+            if (playerPos.y <= minY && velocity.y < 0) {      
+                velocity.y = 0;                    
+            }
+            else if (playerPos.y >= maxY && velocity.y > 0) { 
+                velocity.y = 0;                   
+            }
 
             if (velocity.x == 0 && velocity.y == 0) {
+                auto& playerComp = player->getComposite();
                 playerComp.setAnimationActive(1, false);
                 playerComp.setVisible(1, false);
                 playerComp.setAnimationActive(0, true);
                 playerComp.setVisible(0, true);
-            }
-            else {
+            }else {
+                auto& playerComp = player->getComposite();
                 playerComp.setAnimationActive(1, true);
                 playerComp.setVisible(1, true);
                 playerComp.setAnimationActive(0, false);

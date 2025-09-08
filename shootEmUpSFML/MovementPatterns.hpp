@@ -22,4 +22,8 @@ namespace MovementPatterns {
     MovementPattern linearAngleDirectionAccelerate(float speed, float accelerate);
 
     MovementPattern cShape(float speedX, float speedY, float deltaSpeedX);
+
+    MovementPattern moveToRandom(float speed, float minX, float maxX, float minY, float maxY);
+
+    MovementPattern bounce(float speedX, float speedY, float minX, float maxX, float minY, float maxY);
 } 
